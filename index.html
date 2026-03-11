@@ -29,6 +29,49 @@
       </div>
     </section>
 
+    <section class="section input-section">
+      <div class="section-heading split-heading">
+        <div>
+          <p class="eyebrow">Try Your Own Data</p>
+          <h2>Paste JSON or Upload a File</h2>
+        </div>
+        <p class="section-note">Use the bundled sample or paste workload telemetry in JSON to generate a fresh report.</p>
+      </div>
+      <div class="input-shell">
+        <div class="input-panel">
+          <label class="input-label" for="jsonInput">Workload JSON</label>
+          <textarea id="jsonInput" spellcheck="false"></textarea>
+          <div class="input-actions">
+            <button id="analyzeBtn" type="button">Analyze Input</button>
+            <button id="loadSampleBtn" type="button" class="secondary">Load Sample</button>
+            <label class="upload-button" for="fileInput">Upload JSON</label>
+            <input id="fileInput" type="file" accept="application/json,.json">
+          </div>
+          <p class="status-message" id="statusMessage">Sample data loaded. You can analyze it directly or replace it with your own JSON.</p>
+        </div>
+        <aside class="input-help">
+          <p class="mini-label">Accepted Shape</p>
+          <pre><code>{
+  "cluster": "team-cluster",
+  "workloads": [
+    {
+      "name": "service-a",
+      "namespace": "prod",
+      "current_cpu_request_millicores": 1000,
+      "current_memory_request_mib": 1024,
+      "snapshots": [
+        {
+          "cpu_usage_millicores": 420,
+          "memory_usage_mib": 512
+        }
+      ]
+    }
+  ]
+}</code></pre>
+        </aside>
+      </div>
+    </section>
+
     <section class="section impact-section">
       <div class="section-heading split-heading">
         <div>

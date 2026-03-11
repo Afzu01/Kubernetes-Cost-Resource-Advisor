@@ -3,45 +3,60 @@ const pricing = {
   memoryGiBPerMonth: 4
 };
 
-const input = {
+const sampleInput = {
   cluster: "demo-cluster",
-  sourceNote: "Synthetic workload traces modeled after overprovisioned Kubernetes services.",
+  source_note: "Synthetic workload traces modeled after overprovisioned Kubernetes services.",
   workloads: [
     {
       name: "api-gateway",
       namespace: "platform",
-      currentCPUReqMil: 1000,
-      currentMemReqMiB: 1024,
-      snapshots: [210, 260, 290, 340, 370, 410].map((cpu, index) => ({
-        timestamp: `2026-03-10T${String(index + 9).padStart(2, "0")}:00:00Z`,
-        cpuUsageMil: cpu,
-        memUsageMiB: [380, 410, 430, 455, 470, 500][index]
-      }))
+      current_cpu_request_millicores: 1000,
+      current_memory_request_mib: 1024,
+      snapshots: [
+        { timestamp: "2026-03-10T09:00:00Z", cpu_usage_millicores: 210, memory_usage_mib: 380 },
+        { timestamp: "2026-03-10T10:00:00Z", cpu_usage_millicores: 260, memory_usage_mib: 410 },
+        { timestamp: "2026-03-10T11:00:00Z", cpu_usage_millicores: 290, memory_usage_mib: 430 },
+        { timestamp: "2026-03-10T12:00:00Z", cpu_usage_millicores: 340, memory_usage_mib: 455 },
+        { timestamp: "2026-03-10T13:00:00Z", cpu_usage_millicores: 370, memory_usage_mib: 470 },
+        { timestamp: "2026-03-10T14:00:00Z", cpu_usage_millicores: 410, memory_usage_mib: 500 }
+      ]
     },
     {
       name: "batch-worker",
       namespace: "analytics",
-      currentCPUReqMil: 2000,
-      currentMemReqMiB: 3072,
-      snapshots: [620, 710, 870, 940, 1010, 1130].map((cpu, index) => ({
-        timestamp: `2026-03-10T${String(index + 9).padStart(2, "0")}:00:00Z`,
-        cpuUsageMil: cpu,
-        memUsageMiB: [980, 1100, 1220, 1310, 1420, 1490][index]
-      }))
+      current_cpu_request_millicores: 2000,
+      current_memory_request_mib: 3072,
+      snapshots: [
+        { timestamp: "2026-03-10T09:00:00Z", cpu_usage_millicores: 620, memory_usage_mib: 980 },
+        { timestamp: "2026-03-10T10:00:00Z", cpu_usage_millicores: 710, memory_usage_mib: 1100 },
+        { timestamp: "2026-03-10T11:00:00Z", cpu_usage_millicores: 870, memory_usage_mib: 1220 },
+        { timestamp: "2026-03-10T12:00:00Z", cpu_usage_millicores: 940, memory_usage_mib: 1310 },
+        { timestamp: "2026-03-10T13:00:00Z", cpu_usage_millicores: 1010, memory_usage_mib: 1420 },
+        { timestamp: "2026-03-10T14:00:00Z", cpu_usage_millicores: 1130, memory_usage_mib: 1490 }
+      ]
     },
     {
       name: "realtime-inference",
       namespace: "ml",
-      currentCPUReqMil: 1500,
-      currentMemReqMiB: 2048,
-      snapshots: [740, 810, 920, 980, 1060, 1150].map((cpu, index) => ({
-        timestamp: `2026-03-10T${String(index + 9).padStart(2, "0")}:00:00Z`,
-        cpuUsageMil: cpu,
-        memUsageMiB: [1100, 1180, 1240, 1290, 1360, 1450][index]
-      }))
+      current_cpu_request_millicores: 1500,
+      current_memory_request_mib: 2048,
+      snapshots: [
+        { timestamp: "2026-03-10T09:00:00Z", cpu_usage_millicores: 740, memory_usage_mib: 1100 },
+        { timestamp: "2026-03-10T10:00:00Z", cpu_usage_millicores: 810, memory_usage_mib: 1180 },
+        { timestamp: "2026-03-10T11:00:00Z", cpu_usage_millicores: 920, memory_usage_mib: 1240 },
+        { timestamp: "2026-03-10T12:00:00Z", cpu_usage_millicores: 980, memory_usage_mib: 1290 },
+        { timestamp: "2026-03-10T13:00:00Z", cpu_usage_millicores: 1060, memory_usage_mib: 1360 },
+        { timestamp: "2026-03-10T14:00:00Z", cpu_usage_millicores: 1150, memory_usage_mib: 1450 }
+      ]
     }
   ]
 };
+
+const jsonInput = document.getElementById("jsonInput");
+const statusMessage = document.getElementById("statusMessage");
+const analyzeBtn = document.getElementById("analyzeBtn");
+const loadSampleBtn = document.getElementById("loadSampleBtn");
+const fileInput = document.getElementById("fileInput");
 
 function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -76,6 +91,66 @@ function formatMoney(value) {
     currency: "USD",
     maximumFractionDigits: 0
   }).format(value);
+}
+
+function setStatus(message, type = "") {
+  statusMessage.textContent = message;
+  statusMessage.className = `status-message${type ? ` ${type}` : ""}`;
+}
+
+function pick(obj, keys) {
+  for (const key of keys) {
+    if (obj && Object.prototype.hasOwnProperty.call(obj, key) && obj[key] !== undefined && obj[key] !== null) {
+      return obj[key];
+    }
+  }
+  return undefined;
+}
+
+function normalizeInput(raw) {
+  if (!raw || typeof raw !== "object") {
+    throw new Error("Input must be a JSON object.");
+  }
+
+  const workloads = pick(raw, ["workloads"]);
+  if (!Array.isArray(workloads) || workloads.length === 0) {
+    throw new Error("Input must include a non-empty workloads array.");
+  }
+
+  return {
+    cluster: pick(raw, ["cluster"]) || "custom-cluster",
+    sourceNote: pick(raw, ["source_note", "sourceNote"]) || "User-provided workload telemetry.",
+    workloads: workloads.map((workload, workloadIndex) => {
+      const snapshots = pick(workload, ["snapshots"]);
+      if (!Array.isArray(snapshots) || snapshots.length === 0) {
+        throw new Error(`Workload at index ${workloadIndex} must include snapshots.`);
+      }
+
+      const normalized = {
+        name: pick(workload, ["name"]) || `workload-${workloadIndex + 1}`,
+        namespace: pick(workload, ["namespace"]) || "default",
+        currentCPUReqMil: Number(pick(workload, ["current_cpu_request_millicores", "currentCPUReqMil", "currentCpuRequestMillicores"])),
+        currentMemReqMiB: Number(pick(workload, ["current_memory_request_mib", "currentMemReqMiB", "currentMemoryRequestMiB"])),
+        snapshots: snapshots.map((snapshot, snapshotIndex) => ({
+          timestamp: pick(snapshot, ["timestamp"]) || `sample-${snapshotIndex + 1}`,
+          cpuUsageMil: Number(pick(snapshot, ["cpu_usage_millicores", "cpuUsageMil", "cpu_usage_millicore"])),
+          memUsageMiB: Number(pick(snapshot, ["memory_usage_mib", "memUsageMiB", "memoryUsageMiB"]))
+        }))
+      };
+
+      if (!Number.isFinite(normalized.currentCPUReqMil) || !Number.isFinite(normalized.currentMemReqMiB)) {
+        throw new Error(`Workload ${normalized.name} is missing current CPU or memory request values.`);
+      }
+
+      normalized.snapshots.forEach((snapshot, snapshotIndex) => {
+        if (!Number.isFinite(snapshot.cpuUsageMil) || !Number.isFinite(snapshot.memUsageMiB)) {
+          throw new Error(`Snapshot ${snapshotIndex + 1} in workload ${normalized.name} is missing CPU or memory usage values.`);
+        }
+      });
+
+      return normalized;
+    })
+  };
 }
 
 function analyzeWorkload(workload) {
@@ -152,10 +227,10 @@ function summarize(recommendations) {
   return totals;
 }
 
-function renderSummary(recommendations, totals) {
+function renderSummary(dataset, recommendations, totals) {
   const summaryCards = document.getElementById("summaryCards");
   const cards = [
-    { value: input.cluster, label: "Cluster" },
+    { value: dataset.cluster, label: "Cluster" },
     { value: recommendations.length, label: "Workloads Reviewed" },
     { value: formatMoney(totals.monthlySavings), label: "Monthly Savings" },
     { value: `${totals.cpuReductionPercent.toFixed(1)}%`, label: "CPU Reclaimed" }
@@ -173,8 +248,8 @@ function renderSummary(recommendations, totals) {
 
 function renderImpact(totals) {
   const impactGrid = document.getElementById("impactGrid");
-  const maxCpu = Math.max(totals.currentCPU, totals.recommendedCPU);
-  const maxMemory = Math.max(totals.currentMemory, totals.recommendedMemory);
+  const maxCpu = Math.max(totals.currentCPU, totals.recommendedCPU, 1);
+  const maxMemory = Math.max(totals.currentMemory, totals.recommendedMemory, 1);
 
   impactGrid.innerHTML = `
     <article class="impact-card featured">
@@ -289,9 +364,51 @@ function renderWorkloads(recommendations) {
     .join("");
 }
 
-const recommendations = input.workloads.map(analyzeWorkload);
-const totals = summarize(recommendations);
+function renderDashboard(dataset) {
+  const recommendations = dataset.workloads.map(analyzeWorkload);
+  const totals = summarize(recommendations);
 
-renderSummary(recommendations, totals);
-renderImpact(totals);
-renderWorkloads(recommendations);
+  renderSummary(dataset, recommendations, totals);
+  renderImpact(totals);
+  renderWorkloads(recommendations);
+}
+
+function loadIntoTextarea(data) {
+  jsonInput.value = JSON.stringify(data, null, 2);
+}
+
+function analyzeFromTextarea() {
+  try {
+    const raw = JSON.parse(jsonInput.value);
+    const dataset = normalizeInput(raw);
+    renderDashboard(dataset);
+    setStatus(`Loaded ${dataset.workloads.length} workload(s) from ${dataset.cluster}.`, "success");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
+}
+
+analyzeBtn.addEventListener("click", analyzeFromTextarea);
+
+loadSampleBtn.addEventListener("click", () => {
+  loadIntoTextarea(sampleInput);
+  analyzeFromTextarea();
+});
+
+fileInput.addEventListener("change", async (event) => {
+  const [file] = event.target.files || [];
+  if (!file) {
+    return;
+  }
+
+  try {
+    const text = await file.text();
+    jsonInput.value = text;
+    analyzeFromTextarea();
+  } catch (error) {
+    setStatus(`Could not read file: ${error.message}`, "error");
+  }
+});
+
+loadIntoTextarea(sampleInput);
+analyzeFromTextarea();
