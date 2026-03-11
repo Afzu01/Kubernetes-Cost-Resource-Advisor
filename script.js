@@ -1,3 +1,8 @@
+const pricing = {
+  cpuCorePerMonth: 18,
+  memoryGiBPerMonth: 4
+};
+
 const input = {
   cluster: "demo-cluster",
   sourceNote: "Synthetic workload traces modeled after overprovisioned Kubernetes services.",
@@ -8,7 +13,7 @@ const input = {
       currentCPUReqMil: 1000,
       currentMemReqMiB: 1024,
       snapshots: [210, 260, 290, 340, 370, 410].map((cpu, index) => ({
-        timestamp: `2026-03-10T0${index + 9}:00:00Z`,
+        timestamp: `2026-03-10T${String(index + 9).padStart(2, "0")}:00:00Z`,
         cpuUsageMil: cpu,
         memUsageMiB: [380, 410, 430, 455, 470, 500][index]
       }))
@@ -19,7 +24,7 @@ const input = {
       currentCPUReqMil: 2000,
       currentMemReqMiB: 3072,
       snapshots: [620, 710, 870, 940, 1010, 1130].map((cpu, index) => ({
-        timestamp: `2026-03-10T0${index + 9}:00:00Z`,
+        timestamp: `2026-03-10T${String(index + 9).padStart(2, "0")}:00:00Z`,
         cpuUsageMil: cpu,
         memUsageMiB: [980, 1100, 1220, 1310, 1420, 1490][index]
       }))
@@ -30,7 +35,7 @@ const input = {
       currentCPUReqMil: 1500,
       currentMemReqMiB: 2048,
       snapshots: [740, 810, 920, 980, 1060, 1150].map((cpu, index) => ({
-        timestamp: `2026-03-10T0${index + 9}:00:00Z`,
+        timestamp: `2026-03-10T${String(index + 9).padStart(2, "0")}:00:00Z`,
         cpuUsageMil: cpu,
         memUsageMiB: [1100, 1180, 1240, 1290, 1360, 1450][index]
       }))
@@ -59,16 +64,35 @@ function savingsPercent(current, recommended) {
   return ((current - recommended) / current) * 100;
 }
 
+function costForRequest(cpuMillicores, memoryMiB) {
+  const cpuCost = (cpuMillicores / 1000) * pricing.cpuCorePerMonth;
+  const memoryCost = (memoryMiB / 1024) * pricing.memoryGiBPerMonth;
+  return cpuCost + memoryCost;
+}
+
+function formatMoney(value) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
 function analyzeWorkload(workload) {
   const cpuSeries = workload.snapshots.map((snapshot) => snapshot.cpuUsageMil);
   const memSeries = workload.snapshots.map((snapshot) => snapshot.memUsageMiB);
 
+  const cpuAvg = average(cpuSeries);
+  const memAvg = average(memSeries);
   const cpuP95 = percentile(cpuSeries, 95);
   const memP95 = percentile(memSeries, 95);
   const recommendedCPU = roundUp(cpuP95 * 1.2, 25);
   const recommendedMemory = roundUp(memP95 * 1.15, 32);
   const cpuSavings = savingsPercent(workload.currentCPUReqMil, recommendedCPU);
   const memorySavings = savingsPercent(workload.currentMemReqMiB, recommendedMemory);
+  const currentMonthlyCost = costForRequest(workload.currentCPUReqMil, workload.currentMemReqMiB);
+  const recommendedMonthlyCost = costForRequest(recommendedCPU, recommendedMemory);
+  const monthlySavings = currentMonthlyCost - recommendedMonthlyCost;
 
   let riskLevel = "low";
   let reason = "Stable usage pattern with conservative optimization headroom.";
@@ -86,28 +110,55 @@ function analyzeWorkload(workload) {
     namespace: workload.namespace,
     currentCPUReqMil: workload.currentCPUReqMil,
     currentMemReqMiB: workload.currentMemReqMiB,
-    cpuAvg: average(cpuSeries),
-    memAvg: average(memSeries),
+    cpuAvg,
+    memAvg,
     cpuP95,
     memP95,
     recommendedCPU,
     recommendedMemory,
     cpuSavings,
     memorySavings,
+    currentMonthlyCost,
+    recommendedMonthlyCost,
+    monthlySavings,
     riskLevel,
     reason
   };
 }
 
-function renderSummary(recommendations) {
-  const summaryCards = document.getElementById("summaryCards");
-  const totalCPU = recommendations.reduce((sum, item) => sum + item.cpuSavings, 0) / recommendations.length;
-  const totalMemory = recommendations.reduce((sum, item) => sum + item.memorySavings, 0) / recommendations.length;
+function summarize(recommendations) {
+  const totals = recommendations.reduce((acc, item) => {
+    acc.currentCPU += item.currentCPUReqMil;
+    acc.currentMemory += item.currentMemReqMiB;
+    acc.recommendedCPU += item.recommendedCPU;
+    acc.recommendedMemory += item.recommendedMemory;
+    acc.currentCost += item.currentMonthlyCost;
+    acc.recommendedCost += item.recommendedMonthlyCost;
+    acc.monthlySavings += item.monthlySavings;
+    return acc;
+  }, {
+    currentCPU: 0,
+    currentMemory: 0,
+    recommendedCPU: 0,
+    recommendedMemory: 0,
+    currentCost: 0,
+    recommendedCost: 0,
+    monthlySavings: 0
+  });
 
+  totals.cpuReductionPercent = savingsPercent(totals.currentCPU, totals.recommendedCPU);
+  totals.memoryReductionPercent = savingsPercent(totals.currentMemory, totals.recommendedMemory);
+  totals.yearlySavings = totals.monthlySavings * 12;
+  return totals;
+}
+
+function renderSummary(recommendations, totals) {
+  const summaryCards = document.getElementById("summaryCards");
   const cards = [
     { value: input.cluster, label: "Cluster" },
-    { value: `${totalCPU.toFixed(1)}%`, label: "Average CPU Savings" },
-    { value: `${totalMemory.toFixed(1)}%`, label: "Average Memory Savings" }
+    { value: recommendations.length, label: "Workloads Reviewed" },
+    { value: formatMoney(totals.monthlySavings), label: "Monthly Savings" },
+    { value: `${totals.cpuReductionPercent.toFixed(1)}%`, label: "CPU Reclaimed" }
   ];
 
   summaryCards.innerHTML = cards
@@ -120,6 +171,70 @@ function renderSummary(recommendations) {
     .join("");
 }
 
+function renderImpact(totals) {
+  const impactGrid = document.getElementById("impactGrid");
+  const maxCpu = Math.max(totals.currentCPU, totals.recommendedCPU);
+  const maxMemory = Math.max(totals.currentMemory, totals.recommendedMemory);
+
+  impactGrid.innerHTML = `
+    <article class="impact-card featured">
+      <p class="mini-label">Projected Savings</p>
+      <div class="big-money">${formatMoney(totals.monthlySavings)}/mo</div>
+      <p>About ${formatMoney(totals.yearlySavings)} in annual savings if these recommendations are adopted across the reviewed workloads.</p>
+      <div class="impact-row">
+        <span class="allocation-label">Current reserved cost</span>
+        <strong>${formatMoney(totals.currentCost)}/mo</strong>
+      </div>
+      <div class="impact-row">
+        <span class="allocation-label">Recommended reserved cost</span>
+        <strong>${formatMoney(totals.recommendedCost)}/mo</strong>
+      </div>
+    </article>
+    <article class="impact-card">
+      <p class="mini-label">Current Allocation</p>
+      <strong class="big-number">${(totals.currentCPU / 1000).toFixed(1)} cores</strong>
+      <p class="subtle">${(totals.currentMemory / 1024).toFixed(1)} GiB memory reserved across the reviewed workloads.</p>
+      <div class="allocation-bars">
+        <div class="allocation-bar">
+          <div class="bar-header">
+            <span class="allocation-label">CPU</span>
+            <strong>${totals.currentCPU.toFixed(0)}m</strong>
+          </div>
+          <div class="track"><div class="fill" style="width:${(totals.currentCPU / maxCpu) * 100}%"></div></div>
+        </div>
+        <div class="allocation-bar">
+          <div class="bar-header">
+            <span class="allocation-label">Memory</span>
+            <strong>${totals.currentMemory.toFixed(0)}Mi</strong>
+          </div>
+          <div class="track"><div class="fill" style="width:${(totals.currentMemory / maxMemory) * 100}%"></div></div>
+        </div>
+      </div>
+    </article>
+    <article class="impact-card">
+      <p class="mini-label">Recommended Allocation</p>
+      <strong class="big-number">${(totals.recommendedCPU / 1000).toFixed(1)} cores</strong>
+      <p class="subtle">${(totals.recommendedMemory / 1024).toFixed(1)} GiB memory after P95-based right-sizing and safety buffering.</p>
+      <div class="allocation-bars">
+        <div class="allocation-bar">
+          <div class="bar-header">
+            <span class="allocation-label">CPU</span>
+            <strong>${totals.recommendedCPU.toFixed(0)}m</strong>
+          </div>
+          <div class="track"><div class="fill recommended" style="width:${(totals.recommendedCPU / maxCpu) * 100}%"></div></div>
+        </div>
+        <div class="allocation-bar">
+          <div class="bar-header">
+            <span class="allocation-label">Memory</span>
+            <strong>${totals.recommendedMemory.toFixed(0)}Mi</strong>
+          </div>
+          <div class="track"><div class="fill recommended" style="width:${(totals.recommendedMemory / maxMemory) * 100}%"></div></div>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
 function renderWorkloads(recommendations) {
   const workloadGrid = document.getElementById("workloadGrid");
 
@@ -130,9 +245,20 @@ function renderWorkloads(recommendations) {
           <div>
             <p class="kicker">${item.namespace}</p>
             <h3>${item.name}</h3>
-            <p class="meta">Current request: ${item.currentCPUReqMil}m CPU / ${item.currentMemReqMiB}Mi memory</p>
+            <p class="meta">Observed usage translated into a safer right-sized request.</p>
           </div>
           <span class="risk-pill ${item.riskLevel}">${item.riskLevel} risk</span>
+        </div>
+
+        <div class="workload-current-next">
+          <div>
+            <span class="allocation-label">Current</span>
+            <strong>${item.currentCPUReqMil}m / ${item.currentMemReqMiB}Mi</strong>
+          </div>
+          <div>
+            <span class="allocation-label">Recommended</span>
+            <strong>${item.recommendedCPU.toFixed(0)}m / ${item.recommendedMemory.toFixed(0)}Mi</strong>
+          </div>
         </div>
 
         <div class="metric-grid">
@@ -145,22 +271,27 @@ function renderWorkloads(recommendations) {
             <div class="metric-value">${item.memAvg.toFixed(0)}Mi / ${item.memP95.toFixed(0)}Mi</div>
           </div>
           <div class="metric">
-            <span class="metric-label">Recommended CPU</span>
-            <div class="metric-value">${item.recommendedCPU.toFixed(0)}m</div>
+            <span class="metric-label">CPU / Memory Savings</span>
+            <div class="metric-value">${item.cpuSavings.toFixed(1)}% / ${item.memorySavings.toFixed(1)}%</div>
           </div>
           <div class="metric">
-            <span class="metric-label">Recommended Memory</span>
-            <div class="metric-value">${item.recommendedMemory.toFixed(0)}Mi</div>
+            <span class="metric-label">Monthly Cost Impact</span>
+            <div class="metric-value">${formatMoney(item.monthlySavings)}</div>
           </div>
         </div>
 
-        <p class="reason">${item.reason}</p>
-        <p><code>Savings:</code> ${item.cpuSavings.toFixed(1)}% CPU and ${item.memorySavings.toFixed(1)}% memory</p>
+        <div class="workload-savings">
+          <p class="reason">${item.reason}</p>
+          <strong>${formatMoney(item.currentMonthlyCost)} -> ${formatMoney(item.recommendedMonthlyCost)}</strong>
+        </div>
       </article>
     `)
     .join("");
 }
 
 const recommendations = input.workloads.map(analyzeWorkload);
-renderSummary(recommendations);
+const totals = summarize(recommendations);
+
+renderSummary(recommendations, totals);
+renderImpact(totals);
 renderWorkloads(recommendations);
