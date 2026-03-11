@@ -1,25 +1,24 @@
-# Kubernetes Resource Recommender
+# Kubernetes Cost & Resource Advisor
 
-A compact Go project that demonstrates how workload-aware resource recommendations can improve Kubernetes cluster efficiency. It is directly inspired by Chaturtham AI Data Science's compute optimization problem: cloud clusters are often overprovisioned because schedulers use static peak estimates instead of observed workload behavior.
+A lightweight project that helps teams spot overprovisioned Kubernetes workloads, recommend safer CPU and memory requests, and estimate cost savings before making cluster changes. It is directly inspired by Chaturtham AI Data Science's compute optimization problem: cloud clusters are often overprovisioned because schedulers use static peak estimates instead of observed workload behavior.
 
-This demo acts like a lightweight optimization layer:
+This project includes:
 
-- It reads workload CPU and memory traces.
-- It computes average and P95 usage.
-- It adds a safety buffer.
-- It recommends safer Kubernetes resource requests.
-- It estimates the infrastructure savings from reducing overprovisioning.
+- a Go analysis prototype
+- a static HTML/CSS/JS dashboard
+- custom JSON input support for user-provided workload data
+- cost and allocation impact views
 
 ## Why this project fits the role
 
-Chaturtham is building an intelligent compute optimization engine for modern clusters. This demo shows the same underlying thinking:
+Chaturtham is building an intelligent compute optimization engine for modern clusters. This project shows the same underlying thinking:
 
 - runtime observation of workloads
 - workload-aware resource prediction
 - safe request tuning using statistical envelopes
 - cluster efficiency improvement without blindly cutting capacity
 
-Even though this is a simplified offline prototype, the design maps directly to real systems that use:
+Even though this is a simplified prototype, the design maps directly to real systems that use:
 
 - Kubernetes
 - cgroups
@@ -33,6 +32,9 @@ Even though this is a simplified offline prototype, the design maps directly to 
 .
 |-- go.mod
 |-- main.go
+|-- index.html
+|-- styles.css
+|-- script.js
 |-- README.md
 |-- APPLICATION_TEXT.md
 |-- SUBMISSION_PITCH.md
@@ -40,7 +42,15 @@ Even though this is a simplified offline prototype, the design maps directly to 
     `-- workloads.json
 ```
 
-## How it works
+## What users can do
+
+1. Open the dashboard in `index.html`.
+2. Use the bundled sample dataset or paste/upload custom workload JSON.
+3. Review right-sized CPU and memory recommendations.
+4. Compare current vs recommended allocation.
+5. Estimate monthly and yearly cost savings.
+
+## How the recommendation engine works
 
 For every workload:
 
@@ -60,6 +70,23 @@ This mirrors a safe optimization strategy used in production systems:
 - keep headroom to avoid performance regressions
 
 ## Run it
+
+### Visual dashboard
+
+Open:
+
+```text
+index.html
+```
+
+The dashboard supports:
+
+- pasted JSON input
+- uploaded `.json` files
+- workload-by-workload recommendations
+- cluster-level savings summaries
+
+### Go prototype
 
 ```bash
 go run .
@@ -93,7 +120,7 @@ Why: stable usage pattern with safe optimization headroom
 
 If you need to explain this project in the application or interview, use this:
 
-> I built a Go-based Kubernetes resource recommender that analyzes workload telemetry and suggests safer CPU and memory requests using P95-based envelopes and safety buffers. The goal is to reduce overprovisioning while preserving reliability, which is closely aligned with compute optimization for modern clusters.
+> I built a Kubernetes Cost & Resource Advisor that analyzes workload telemetry, recommends safer CPU and memory requests using P95-based envelopes and safety buffers, and estimates the cost impact of right-sizing. The goal is to reduce overprovisioning while preserving reliability.
 
 ## What I would build next
 
@@ -112,11 +139,13 @@ If I had more time, I would extend this into a fuller system:
 - workload-aware scheduling intuition
 - percentile-based resource planning
 - cluster utilization optimization
-- production safety thinking
+- cost visibility for small teams
+- user-facing tooling with custom input support
 
 ## Submission checklist
 
 - Mention that the project is a prototype inspired by compute optimization.
 - Explain that it recommends safer requests based on observed usage instead of peak guesses.
 - Highlight Go, Kubernetes, metrics, and systems thinking.
+- Mention that users can paste or upload workload telemetry to generate a fresh report.
 - If asked about future scope, mention live metrics ingestion, MongoDB persistence, and VictoriaMetrics integration.
