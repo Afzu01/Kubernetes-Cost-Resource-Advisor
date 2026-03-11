@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kubernetes Resource Recommender</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page-shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Founding Engineer Project Preview</p>
+        <h1>Kubernetes Resource Recommender</h1>
+        <p class="hero-text">
+          A visual prototype of a workload-aware optimization engine that turns runtime telemetry
+          into safer Kubernetes CPU and memory requests.
+        </p>
+        <div class="hero-metrics" id="summaryCards"></div>
+      </div>
+      <div class="hero-panel">
+        <p class="panel-label">System Idea</p>
+        <ul class="signal-list">
+          <li>Observe workload behavior continuously</li>
+          <li>Estimate safe CPU and memory envelopes</li>
+          <li>Reduce overprovisioning with safety buffers</li>
+          <li>Improve cluster utilization without breaking reliability</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <p class="eyebrow">Optimization Report</p>
+        <h2>Workload Recommendations</h2>
+      </div>
+      <div class="grid" id="workloadGrid"></div>
+    </section>
+
+    <section class="section architecture">
+      <div class="section-heading">
+        <p class="eyebrow">How It Works</p>
+        <h2>Prototype Flow</h2>
+      </div>
+      <div class="flow-grid">
+        <article class="flow-card">
+          <span>01</span>
+          <h3>Telemetry Input</h3>
+          <p>CPU and memory snapshots represent workload behavior over time.</p>
+        </article>
+        <article class="flow-card">
+          <span>02</span>
+          <h3>P95 Envelope</h3>
+          <p>The engine computes higher-percentile usage instead of relying on average usage.</p>
+        </article>
+        <article class="flow-card">
+          <span>03</span>
+          <h3>Safety Buffer</h3>
+          <p>Recommendations keep extra headroom to reduce throttling and OOM risk.</p>
+        </article>
+        <article class="flow-card">
+          <span>04</span>
+          <h3>Cluster Savings</h3>
+          <p>The result is safer resource tuning and better infrastructure efficiency.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "cluster": "demo-cluster",
+  "source_note": "Synthetic workload traces modeled after overprovisioned Kubernetes services.",
+  "workloads": [
+    {
+      "name": "api-gateway",
+      "namespace": "platform",
+      "current_cpu_request_millicores": 1000,
+      "current_memory_request_mib": 1024,
+      "snapshots": [
+        { "timestamp": "2026-03-10T09:00:00Z", "cpu_usage_millicores": 210, "memory_usage_mib": 380 },
+        { "timestamp": "2026-03-10T10:00:00Z", "cpu_usage_millicores": 260, "memory_usage_mib": 410 },
+        { "timestamp": "2026-03-10T11:00:00Z", "cpu_usage_millicores": 290, "memory_usage_mib": 430 },
+        { "timestamp": "2026-03-10T12:00:00Z", "cpu_usage_millicores": 340, "memory_usage_mib": 455 },
+        { "timestamp": "2026-03-10T13:00:00Z", "cpu_usage_millicores": 370, "memory_usage_mib": 470 },
+        { "timestamp": "2026-03-10T14:00:00Z", "cpu_usage_millicores": 410, "memory_usage_mib": 500 }
+      ]
+    },
+    {
+      "name": "batch-worker",
+      "namespace": "analytics",
+      "current_cpu_request_millicores": 2000,
+      "current_memory_request_mib": 3072,
+      "snapshots": [
+        { "timestamp": "2026-03-10T09:00:00Z", "cpu_usage_millicores": 620, "memory_usage_mib": 980 },
+        { "timestamp": "2026-03-10T10:00:00Z", "cpu_usage_millicores": 710, "memory_usage_mib": 1100 },
+        { "timestamp": "2026-03-10T11:00:00Z", "cpu_usage_millicores": 870, "memory_usage_mib": 1220 },
+        { "timestamp": "2026-03-10T12:00:00Z", "cpu_usage_millicores": 940, "memory_usage_mib": 1310 },
+        { "timestamp": "2026-03-10T13:00:00Z", "cpu_usage_millicores": 1010, "memory_usage_mib": 1420 },
+        { "timestamp": "2026-03-10T14:00:00Z", "cpu_usage_millicores": 1130, "memory_usage_mib": 1490 }
+      ]
+    },
+    {
+      "name": "realtime-inference",
+      "namespace": "ml",
+      "current_cpu_request_millicores": 1500,
+      "current_memory_request_mib": 2048,
+      "snapshots": [
+        { "timestamp": "2026-03-10T09:00:00Z", "cpu_usage_millicores": 740, "memory_usage_mib": 1100 },
+        { "timestamp": "2026-03-10T10:00:00Z", "cpu_usage_millicores": 810, "memory_usage_mib": 1180 },
+        { "timestamp": "2026-03-10T11:00:00Z", "cpu_usage_millicores": 920, "memory_usage_mib": 1240 },
+        { "timestamp": "2026-03-10T12:00:00Z", "cpu_usage_millicores": 980, "memory_usage_mib": 1290 },
+        { "timestamp": "2026-03-10T13:00:00Z", "cpu_usage_millicores": 1060, "memory_usage_mib": 1360 },
+        { "timestamp": "2026-03-10T14:00:00Z", "cpu_usage_millicores": 1150, "memory_usage_mib": 1450 }
+      ]
+    }
+  ]
+}

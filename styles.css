@@ -1,0 +1,252 @@
+:root {
+  --bg: #f4efe5;
+  --paper: rgba(255, 251, 245, 0.88);
+  --ink: #152033;
+  --muted: #536072;
+  --accent: #c85c38;
+  --accent-soft: #f8d5c7;
+  --line: rgba(21, 32, 51, 0.12);
+  --shadow: 0 20px 50px rgba(21, 32, 51, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(200, 92, 56, 0.24), transparent 30%),
+    radial-gradient(circle at right 20%, rgba(31, 119, 117, 0.18), transparent 24%),
+    linear-gradient(180deg, #f7f1e6 0%, #efe3d3 100%);
+}
+
+.page-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 40px 0 64px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.hero-copy,
+.hero-panel,
+.flow-card,
+.workload-card,
+.summary-card {
+  background: var(--paper);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.hero-copy {
+  border-radius: 28px;
+  padding: 34px;
+}
+
+.hero-panel {
+  border-radius: 28px;
+  padding: 30px;
+  background: linear-gradient(180deg, rgba(21, 32, 51, 0.94), rgba(21, 32, 51, 0.84));
+  color: #f8f2e8;
+}
+
+.eyebrow,
+.panel-label,
+.kicker {
+  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.panel-label {
+  color: #f6c9b5;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.4rem, 5vw, 4.8rem);
+  line-height: 0.94;
+  max-width: 10ch;
+  margin-bottom: 18px;
+}
+
+.hero-text {
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.hero-metrics,
+.grid,
+.flow-grid,
+.metric-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.hero-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 28px;
+}
+
+.summary-card {
+  border-radius: 22px;
+  padding: 20px;
+}
+
+.summary-card strong,
+.big-number {
+  display: block;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.summary-card span,
+.meta,
+.metric-label {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.signal-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 16px;
+  color: rgba(248, 242, 232, 0.92);
+  line-height: 1.6;
+}
+
+.section {
+  margin-top: 28px;
+}
+
+.section-heading {
+  margin-bottom: 16px;
+}
+
+.section-heading h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 0;
+}
+
+.grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.workload-card {
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.workload-card h3 {
+  font-size: 1.35rem;
+  margin-bottom: 4px;
+}
+
+.risk-pill {
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  background: #e8f5eb;
+  color: #27653a;
+}
+
+.risk-pill.medium {
+  background: #fff1cc;
+  color: #8b6500;
+}
+
+.risk-pill.high {
+  background: #fde0dd;
+  color: #9b2f28;
+}
+
+.metric-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 22px 0;
+}
+
+.metric {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(21, 32, 51, 0.08);
+}
+
+.metric-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.reason {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.flow-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.flow-card {
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.flow-card span {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+code {
+  font-family: Consolas, "Courier New", monospace;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-metrics {
+    grid-template-columns: 1fr;
+  }
+}

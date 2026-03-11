@@ -1,0 +1,4 @@
+resource-recommender.exe
+*.exe
+*.test
+*.out
